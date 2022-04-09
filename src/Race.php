@@ -19,8 +19,8 @@ class Race
     */
     public function createTrack()
     {
-        $countStraight = 0; //The number of straights
-        $countCurve = 0; //The number of curves
+        $countStraight = 0; //The number of straights multiples of 40
+        $countCurve = 0; //The number of curves multiples of 40
         $maxCount = 27;//Straight and curve are approximately 50%
         $seqLength = 50; //2000 elements in total, 50 multiples of 40
         $s = 0;
@@ -42,7 +42,6 @@ class Race
                 $countCurve++;
                 $i++;
             }
-
         }
         
     }
@@ -52,20 +51,45 @@ class Race
     */
     public function createCars()
     {
-        $totalSpeed = 22;
-        $minSpeed = 4; //The minimum speed of each type, curve and straight
         $carLength = 5; //5 cars in total
+        $newCar = null; 
+        $i = 0;
+        $sameCar = false; //Check whether the cars have the same speed
 
-        for ($i=0; $i < $carLength; $i++) 
-        { 
-            $cars[$i] = new Car('Car '.strval($i+1),rand($minSpeed,$totalSpeed-$minSpeed));
-        }
-        
+        while ($i < $carLength) 
+        {            
+            $newCar = new Car('Car '.strval($i+1));
+
+            //Make sure cars with different speed
+            for ($j=0; $j < $i; $j++) 
+            { 
+                //Terminate the loop once found a car with same speed
+                if($cars[$j]->straightSpeed == $newCar->straightSpeed)
+                {
+                    $sameCar = true;
+                    break;
+                }
+                
+            }
+
+            //Add car with different speed
+            if(!$sameCar)
+            {
+                $cars[$i] = $newCar;
+                $i++;
+            }
+        } 
     }
     
 
     public function runRace(): RaceResult
     {
+        /* Create track and cars before the race */
+        $this->createTrack();
+        $this->createCars();
+
+        
+
         return null;
     }
 

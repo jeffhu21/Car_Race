@@ -1,4 +1,5 @@
 <?php
+include('Car.php');
 
 class Race
 {
@@ -46,15 +47,18 @@ class Race
         
     }
 
+    /**
+         * Create cars
+    */
     public function createCars()
     {
-        $totalSpeed = 22; //The total speed
+        $totalSpeed = 22;
         $minSpeed = 4; //The minimum speed of each type, curve and straight
         $carLength = 5; //5 cars in total
 
         for ($i=0; $i < $carLength; $i++) 
         { 
-            
+            $cars[$i] = new Car('Car '.strval($i+1),rand($minSpeed,$totalSpeed-$minSpeed));
         }
         
     }

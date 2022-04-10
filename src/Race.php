@@ -1,5 +1,8 @@
 <?php
 include('Car.php');
+include('RaceResult.php');
+
+ini_set('max_execution_time', 0); 
 
 class Race
 {
@@ -28,17 +31,17 @@ class Race
 
         while ($i < $seqLength) 
         {
-            $s = rand(0,1);
+            $s = rand(0,1); //The element can be curve or straight. 0 is curve and 1 is straight
 
             if($s == 1 && $countStraight<$maxCount)
             {
-                $seq[$i] = $s;
+                $this->seq[$i] = $s;
                 $countStraight++;
                 $i++;
             }
             else if($s == 0 && $countCurve<$maxCount)
             {
-                $seq[$i] = $s;
+                $this->seq[$i] = $s;
                 $countCurve++;
                 $i++;
             }
@@ -64,7 +67,7 @@ class Race
             for ($j=0; $j < $i; $j++) 
             { 
                 //Terminate the loop once found a car with same speed
-                if($cars[$j]->straightSpeed == $newCar->straightSpeed)
+                if($this->cars[$j]->straightSpeed == $newCar->straightSpeed)
                 {
                     $sameCar = true;
                     break;
@@ -75,7 +78,7 @@ class Race
             //Add car with different speed
             if(!$sameCar)
             {
-                $cars[$i] = $newCar;
+                $this->cars[$i] = $newCar;
                 $i++;
             }
         } 
@@ -88,9 +91,14 @@ class Race
         $this->createTrack();
         $this->createCars();
 
-        
+        //echo memory_get_usage() . "\n";
 
-        return null;
+        $raceResult = new RaceResult($this->seq,$this->cars);
+
+        unset($this->seq);
+        unset($this->cars);
+
+        return $raceResult;
     }
 
 }

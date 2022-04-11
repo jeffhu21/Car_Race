@@ -18,17 +18,16 @@ class Car
      */
     public $curveSpeed; //Speed on curve
 
-    
+    public $totalSpeed = 22; //The total speed
+
+    public $minSpeed = 4; //The minimum speed of each type, curve and straight
     
     public function __construct(string $carName)
     {
-        $totalSpeed = 22; //The total speed
-
-        $minSpeed = 4; //The minimum speed of each type, curve and straight
 
         $this->carName = $carName;
-        $this->straightSpeed = rand($minSpeed,$totalSpeed-$minSpeed);
-        $this->curveSpeed = $totalSpeed-$this->straightSpeed;
+        $this->straightSpeed = rand($this->minSpeed,$this->totalSpeed-$this->minSpeed);
+        $this->curveSpeed = $this->totalSpeed-$this->straightSpeed;
     }
 
 }

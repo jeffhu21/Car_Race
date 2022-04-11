@@ -20,22 +20,30 @@ class RaceResult
      */
     public $cars = array(); 
 
+    public $len = 40; //Length of each sequence of track
+
     public function __construct(array $seq, array $cars)
     {
         $this->seq = $seq;
         $this->cars = $cars;
     }
 
+    /**
+         * Calculate next positions for each car
+         * @param $currentCarPos - current position for each car
+         * @return $nextCarPos - next positions for each car
+    */
     public function getNextCarPositions($currentCarPos): array
     {
-        $nextCarPos = array(); //Next position of cars
+        $nextCarPos = array(); //Associative Array. Next position of cars
         $currentSeqIndex = 0; //Current Sequence Index
         $nextSeqIndex = 0; //Next Sequence Index
-        $currentSpeed = 0;
+        $currentSpeed = 0; //Current speed
 
         foreach ($this->cars as $car) 
         {
-            $currentSeqIndex=intval(($currentCarPos[$car->carName])/40);
+
+            $currentSeqIndex=intval(($currentCarPos[$car->carName])/($this->len));
 
             if($this->seq[$currentSeqIndex] == 1)
             {
@@ -46,31 +54,82 @@ class RaceResult
                 $currentSpeed = $car->curveSpeed;
             }
 
-            $nextSeqIndex = intval((($currentCarPos[$car->carName])+$currentSpeed)/40);
+            $nextSeqIndex = intval((($currentCarPos[$car->carName])+$currentSpeed)/($this->len));
 
-            if($this->seq[$currentSeqIndex] == $this->seq[$nextSeqIndex])
+            //Check whether the car crosses the finish line
+            if($nextSeqIndex < count($this->seq))
             {
-                $nextCarPos[$car->carName] = intval(($currentCarPos[$car->carName])+$currentSpeed);
+                if($this->seq[$currentSeqIndex] == $this->seq[$nextSeqIndex])
+                {
+                    $nextCarPos[$car->carName] = intval(($currentCarPos[$car->carName])+$currentSpeed);
+                }
+                else
+                {
+                    $nextCarPos[$car->carName] = intval(($this->len)*($nextSeqIndex));
+                }
             }
             else
             {
-                $nextCarPos[$car->carName] = intval(40*($this->seq[$nextSeqIndex]));
+                $nextCarPos[$car->carName] = count($this->seq)*($this->len);// $nextCarPos[$car->carName] = 2000
+                //$nextCarPos[$car->carName] = intval(($currentCarPos[$car->carName])+$currentSpeed);
             }
+            
         }
 
         return $nextCarPos;
 
     }
 
+    /**
+        * Calculate the last dash time
+        * @param $pos - position before car crossing the finish line
+        * @param $carName - name of car crossing the finish line
+        * @return $time - the last dash time
+     */
+    public function timeTaken($pos,$carName)
+    {
+        $time = 0.0;
+        $currentSpeed = 0;
+
+        //Find the car crossing the finish line and get the current speed
+        foreach ($this->cars as $car) 
+        {
+            if($carName == $car->carName)
+            {
+                if($this->seq[count($this->seq)-1] == 1)
+                {
+                    $currentSpeed = $car->straightSpeed;
+                }
+                else
+                {
+                    $currentSpeed = $car->curveSpeed;
+                }
+                break;
+            }
+        }
+
+        //Calculate the last dash time 
+        if($currentSpeed != 0)
+        {
+            $time = number_format((count($this->seq)*($this->len)-$pos)/$currentSpeed,2);
+        }
+
+        //echo('TIME = '.$time."\n");
+
+        return $time;
+    }
+
     public function getRoundResults(): array
     {
-        //echo memory_get_usage() . "\n";
-        //print_r('Manny');
         $round = 0; //Define a round
-        $carPos = array(); //Define cars' position array[carName=>position]
+        $carPos = array(); //Define cars' position, associative array[carName=>position]
         $nextCarPos = array(); //Next position of cars
-        $countWin = 0;
-        
+        $countFinished = 0; //Count how many cars cross the finish line
+        $tempTime = 0.0;
+        $timeTaken = array(); //Collect the last dash time
+        $minTime = 0.0;
+        $countMinTime = 0;
+
         /* Initialize position of each car */
         foreach ($this->cars as $car) 
         {
@@ -80,39 +139,79 @@ class RaceResult
         $roundResult = new RoundResult($round,$carPos); //For Round 0
         array_push($this->roundResults,$roundResult);
 
-        while($countWin == 0)
+        //Start race
+        while($countFinished == 0)
         {
             $nextCarPos=$this->getNextCarPositions($carPos);
-            unset($carPos);
-            $carPos = $nextCarPos;
-            unset($nextCarPos);
             $round++;
 
             //Check whether there is any cars cross the finish line
-            foreach ($carPos as $name => $pos) 
+            foreach ($nextCarPos as $name => $pos) 
             {
-                if($pos >= 2000)
+                if($pos >= count($this->seq)*($this->len))//$pos >= 2000
                 {
-                    $countWin++;
+                    
+                    $tempTime = $this->timeTaken($carPos[$name],$name);
+
+                    //$timeTaken[$countFinished] = $tempTime;
+                    $timeTaken[$name] = $tempTime;
+                    
+                    $countFinished++;
                 }
             }
+
+            unset($carPos);
+            $carPos = $nextCarPos;
+            unset($nextCarPos);
+
             unset($roundResult);
             $roundResult = new RoundResult($round,$carPos); //For next round
             array_push($this->roundResults,$roundResult);
-            
+
         }
 
-        if($countWin > 1)
+        //Determine the game result is win or draw
+        if($countFinished > 1)
         {
-            //Print Draw
-            print_r('DRAW!');
+            $minTime = min($timeTaken);
+
+            //Check whether there is any cars crossing the finish line at the same time
+            foreach ($timeTaken as $name => $time) 
+            {
+                if($time == $minTime)
+                {
+                    print_r($name.", ");
+                    $countMinTime++;
+                }
+            }
+            
+
+            /*
+            for ($i=0; $i < count($timeTaken); $i++) 
+            { 
+                if($timeTaken[$i] == $minTime)
+                {
+                    $countMinTime++;
+                }
+            }
+            */
+            
+            
+            if($countMinTime == 1)
+            {
+                print_r('WIN!<br>'); //Print Win Result
+            }
+            else
+            {
+                print_r('DRAW!<br>'); //Print Draw Result
+            }
+            
+            
         }
-        else
+        elseif($countFinished == 1)
         {
-            //Print Win
-            print_r('WIN!');
+            print_r(key($timeTaken).' WIN!<br>'); //Print Win Result
         }
-        //Print Result
 
         return $this->roundResults;
     }

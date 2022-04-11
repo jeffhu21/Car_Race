@@ -33,6 +33,7 @@ class Race
         {
             $s = rand(0,1); //The element can be curve or straight. 0 is curve and 1 is straight
 
+            //Make sure the number of straight and curve have to be approximately 50%
             if($s == 1 && $countStraight<$maxCount)
             {
                 $this->seq[$i] = $s;
@@ -64,9 +65,11 @@ class Race
             $newCar = new Car('Car '.strval($i+1));
 
             //Make sure cars with different speed
+            /*
             for ($j=0; $j < $i; $j++) 
             { 
                 //Terminate the loop once found a car with same speed
+                
                 if($this->cars[$j]->straightSpeed == $newCar->straightSpeed)
                 {
                     $sameCar = true;
@@ -74,13 +77,14 @@ class Race
                 }
                 
             }
+            */
 
             //Add car with different speed
-            if(!$sameCar)
-            {
+            //if(!$sameCar)
+            //{
                 $this->cars[$i] = $newCar;
                 $i++;
-            }
+            //}
         } 
     }
     
@@ -90,8 +94,6 @@ class Race
         /* Create track and cars before the race */
         $this->createTrack();
         $this->createCars();
-
-        //echo memory_get_usage() . "\n";
 
         $raceResult = new RaceResult($this->seq,$this->cars);
 
